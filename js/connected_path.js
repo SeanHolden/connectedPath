@@ -1,44 +1,25 @@
-/*
-*
-* 0 = empty square
-* 1 = horizontal line
-* 2 = vertical line
-* 3 = bend down to left
-* 4 = bend down to right
-* 5 = bend up to left
-* 6 = bend up to right
-*
-*/
-var Path = function(options) {
+'use strict';
+
+var Path = function(gridArray, options) {
   this.Z = 0;
+  this.block = {
+    HORIZONTAL: 1,
+    VERTICAL: 2,
+    DOWN_LEFT: 3,
+    DOWN_RIGHT: 4,
+    UP_LEFT: 5,
+    UP_RIGHT: 6
+  };
+
   this.currentX = options.start.x;
   this.currentY = options.start.y;
   this.endX = options.end.x;
   this.endY = options.end.y;
   this.comingFrom = options.comingFrom;
-  this.gridWidth = options.gridWidth - 1;
-  this.gridHeight = options.gridHeight - 1;
-  this.setComingFrom(options.comingFrom);
-  this.initializeMap();
-};
-
-Path.prototype.setComingFrom = function(direction) {
-  this.comingFrom = {
-    left: direction === 'left',
-    right: direction === 'right',
-    up: direction === 'up',
-    down: direction === 'down'
-  };
-};
-
-Path.prototype.initializeMap = function() {
-  this.map = [
-    [[0], [0], [0], [0], [0], [1], [0]],
-    [[0], [0], [0], [0], [0], [1], [0]],
-    [[0], [0], [0], [0], [0], [2], [0]],
-    [[0], [0], [0], [0], [0], [1], [0]],
-    [[0], [0], [0], [0], [0], [0], [0]]
-  ];
+  this.setComingFrom(this.comingFrom);
+  this.map = gridArray;
+  this.GRID_WIDTH = this.map.length - 1;
+  this.GRID_HEIGHT = this.map[0].length - 1;
 };
 
 Path.prototype.isConnected = function() {
@@ -56,42 +37,123 @@ Path.prototype.isConnected = function() {
 
 Path.prototype.arrivedAtEndPoint = function() {
   return (this.currentX === this.endX && this.currentY === this.endY);
-}
+};
 
 Path.prototype.moveToNextPosition = function() {
   if (this.blockType().horizontal) {
     if (this.comingFrom.left) {
+      console.log('coming from left, and moving right...');
       return this.moveRight();
     } else {
+      console.log('coming from right, and moving left...');
       return this.moveLeft();
     }
   }
   else if (this.blockType().vertical) {
     if (this.comingFrom.down) {
+      console.log('coming from down, and moving up...');
       return this.moveUp();
     } else {
+      console.log('coming from up, and moving down...');
       return this.moveDown();
+    }
+  }
+  else if (this.blockType().downToLeft) {
+    if (this.comingFrom.down) {
+      console.log('coming from down, and moving left...');
+      return this.moveLeft();
+    } else {
+      console.log('coming from left, and moving down...');
+      return this.moveDown();
+    }
+  }
+  else if (this.blockType().downToRight) {
+    if (this.comingFrom.down) {
+      console.log('coming from down, and moving right...');
+      return this.moveRight();
+    } else {
+      console.log('coming from right, and moving down...');
+      return this.moveDown();
+    }
+  }
+  else if (this.blockType().upToLeft) {
+    if (this.comingFrom.up) {
+      console.log('coming from up, and moving left...');
+      return this.moveLeft();
+    } else {
+      console.log('coming from left, and moving up...');
+      return this.moveUp();
+    }
+  }
+  else if (this.blockType().upToRight) {
+    if (this.comingFrom.up) {
+      console.log('coming from up, and moving right...');
+      return this.moveRight();
+    } else {
+      console.log('coming from right, and moving up...');
+      return this.moveUp();
     }
   }
   console.log('cant move to any position');
   return false;
 };
 
-// TODO: right, up, down blocks
+Path.prototype.setComingFrom = function(direction) {
+  this.comingFrom = {
+    left: direction === 'left',
+    right: direction === 'right',
+    up: direction === 'up',
+    down: direction === 'down'
+  };
+};
+
 Path.prototype.leftBlock = function() {
   return {
-    value: this.currentX - 1,
-    validConnection: [1, 4, 6].indexOf() > -1
+    validConnection: [
+      this.block.HORIZONTAL,
+      this.block.DOWN_RIGHT,
+      this.block.UP_RIGHT
+    ].indexOf(this.leftValue()) > -1
+  };
+};
+
+Path.prototype.rightBlock = function() {
+  return {
+    validConnection: [
+      this.block.HORIZONTAL,
+      this.block.DOWN_LEFT,
+      this.block.UP_LEFT
+    ].indexOf(this.rightValue()) > -1
+  };
+};
+
+Path.prototype.upBlock = function() {
+  return {
+    validConnection: [
+      this.block.VERTICAL,
+      this.block.DOWN_LEFT,
+      this.block.DOWN_RIGHT
+    ].indexOf(this.upValue()) > -1
+  };
+};
+
+Path.prototype.downBlock = function() {
+  return {
+    validConnection: [
+      this.block.VERTICAL,
+      this.block.UP_LEFT,
+      this.block.UP_RIGHT
+    ].indexOf(this.downValue()) > -1
   };
 };
 
 Path.prototype.moveLeft = function() {
-  // ensure the next block is a valid connection from this one
-  if (!this.leftBlock().validConnection) {
+  if (this.currentX === 0) {
     return false;
   }
 
-  if (this.currentX <= 0) {
+  if (!this.leftBlock().validConnection) {
+    console.log("can't move left, invalid connection");
     return false;
   }
 
@@ -100,39 +162,69 @@ Path.prototype.moveLeft = function() {
   return true;
 };
 
-// TODO: validConnection for right, up, down
 Path.prototype.moveRight = function() {
-  if (this.currentX < this.gridWidth) {
-    this.currentX += 1;
-    this.setComingFrom('left');
-    return true;
-  } else {
+  if (this.currentX === this.GRID_WIDTH) {
     return false;
   }
+
+  if (!this.rightBlock().validConnection) {
+    console.log("can't move right, invalid connection");
+    return false;
+  }
+
+  this.currentX += 1;
+  this.setComingFrom('left');
+  return true;
 };
 
 Path.prototype.moveUp = function() {
-  if (this.currentY > 0) {
-    this.currentY -= 1;
-    this.setComingFrom('down');
-    return true;
-  } else {
+  if (this.currentY === 0) {
     return false;
   }
+
+  if (!this.upBlock().validConnection) {
+    console.log("can't move up, invalid connection");
+    return false;
+  }
+
+  this.currentY -= 1;
+  this.setComingFrom('down');
+  return true;
 };
 
 Path.prototype.moveDown = function() {
-  if (this.currentY < this.gridHeight) {
-    this.currentY += 1;
-    this.setComingFrom('up');
-    return true;
-  } else {
+  if (this.currentY === this.GRID_HEIGHT) {
     return false;
   }
+
+  if (!this.downBlock().validConnection) {
+    console.log("can't move down, invalid connection");
+    return false;
+  }
+
+  this.currentY += 1;
+  this.setComingFrom('up');
+  return true;
 };
 
 Path.prototype.currentValue = function() {
   return this.map[this.currentX][this.currentY][this.Z];
+};
+
+Path.prototype.leftValue = function() {
+  return this.map[this.currentX - 1][this.currentY][this.Z];
+};
+
+Path.prototype.rightValue = function() {
+  return this.map[this.currentX + 1][this.currentY][this.Z];
+};
+
+Path.prototype.upValue = function() {
+  return this.map[this.currentX][this.currentY - 1][this.Z];
+};
+
+Path.prototype.downValue = function() {
+  return this.map[this.currentX][this.currentY + 1][this.Z];
 };
 
 Path.prototype.blockType = function() {
@@ -146,18 +238,4 @@ Path.prototype.blockType = function() {
   };
 };
 
-var options = {
-  start: {
-    x: 0,
-    y: 5
-  },
-  end: {
-    x: 3,
-    y: 2
-  },
-  comingFrom: 'left',
-  gridWidth: 5,
-  gridHeight: 7,
-};
-var path = new Path(options);
-console.log(path.isConnected());
+module.exports = Path;
