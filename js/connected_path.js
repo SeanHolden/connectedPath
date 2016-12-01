@@ -1,6 +1,9 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 var Path = function(gridArray, options) {
+  this.logger = new Logger(options.debug);
   this.Z = 0;
   this.block = {
     HORIZONTAL: 1,
@@ -23,7 +26,7 @@ var Path = function(gridArray, options) {
 };
 
 Path.prototype.isConnected = function() {
-  console.log("X: " + this.currentX + ", Y: " + this.currentY + ", value: " + this.currentValue());
+  this.logger.print("X: " + this.currentX + ", Y: " + this.currentY + ", value: " + this.currentValue());
   if (this.arrivedAtEndPoint()) {
     return true;
   } else {
@@ -42,59 +45,59 @@ Path.prototype.arrivedAtEndPoint = function() {
 Path.prototype.moveToNextPosition = function() {
   if (this.blockType().horizontal) {
     if (this.comingFrom.left) {
-      console.log('coming from left, and moving right...');
+      this.logger.print('coming from left, and moving right...');
       return this.moveRight();
     } else {
-      console.log('coming from right, and moving left...');
+      this.logger.print('coming from right, and moving left...');
       return this.moveLeft();
     }
   }
   else if (this.blockType().vertical) {
     if (this.comingFrom.down) {
-      console.log('coming from down, and moving up...');
+      this.logger.print('coming from down, and moving up...');
       return this.moveUp();
     } else {
-      console.log('coming from up, and moving down...');
+      this.logger.print('coming from up, and moving down...');
       return this.moveDown();
     }
   }
   else if (this.blockType().downToLeft) {
     if (this.comingFrom.down) {
-      console.log('coming from down, and moving left...');
+      this.logger.print('coming from down, and moving left...');
       return this.moveLeft();
     } else {
-      console.log('coming from left, and moving down...');
+      this.logger.print('coming from left, and moving down...');
       return this.moveDown();
     }
   }
   else if (this.blockType().downToRight) {
     if (this.comingFrom.down) {
-      console.log('coming from down, and moving right...');
+      this.logger.print('coming from down, and moving right...');
       return this.moveRight();
     } else {
-      console.log('coming from right, and moving down...');
+      this.logger.print('coming from right, and moving down...');
       return this.moveDown();
     }
   }
   else if (this.blockType().upToLeft) {
     if (this.comingFrom.up) {
-      console.log('coming from up, and moving left...');
+      this.logger.print('coming from up, and moving left...');
       return this.moveLeft();
     } else {
-      console.log('coming from left, and moving up...');
+      this.logger.print('coming from left, and moving up...');
       return this.moveUp();
     }
   }
   else if (this.blockType().upToRight) {
     if (this.comingFrom.up) {
-      console.log('coming from up, and moving right...');
+      this.logger.print('coming from up, and moving right...');
       return this.moveRight();
     } else {
-      console.log('coming from right, and moving up...');
+      this.logger.print('coming from right, and moving up...');
       return this.moveUp();
     }
   }
-  console.log('cant move to any position');
+  this.logger.print('cant move to any position');
   return false;
 };
 
@@ -153,7 +156,7 @@ Path.prototype.moveLeft = function() {
   }
 
   if (!this.leftBlock().validConnection) {
-    console.log("can't move left, invalid connection");
+    this.logger.print("can't move left, invalid connection");
     return false;
   }
 
@@ -164,11 +167,12 @@ Path.prototype.moveLeft = function() {
 
 Path.prototype.moveRight = function() {
   if (this.currentX === this.GRID_WIDTH) {
+    this.logger.print("can't move right, reached grid max width");
     return false;
   }
 
   if (!this.rightBlock().validConnection) {
-    console.log("can't move right, invalid connection");
+    this.logger.print("can't move right, invalid connection");
     return false;
   }
 
@@ -183,7 +187,7 @@ Path.prototype.moveUp = function() {
   }
 
   if (!this.upBlock().validConnection) {
-    console.log("can't move up, invalid connection");
+    this.logger.print("can't move up, invalid connection");
     return false;
   }
 
@@ -198,7 +202,7 @@ Path.prototype.moveDown = function() {
   }
 
   if (!this.downBlock().validConnection) {
-    console.log("can't move down, invalid connection");
+    this.logger.print("can't move down, invalid connection");
     return false;
   }
 
