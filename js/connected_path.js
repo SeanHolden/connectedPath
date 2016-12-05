@@ -119,9 +119,9 @@ Path.prototype = {
     return {
       validConnection: [
         this.block.HORIZONTAL,
-      this.block.DOWN_RIGHT,
-      this.block.UP_RIGHT
-        ].indexOf(this.leftValue()) > -1
+        this.block.DOWN_RIGHT,
+        this.block.UP_RIGHT
+      ].indexOf(this.leftValue()) > -1
     };
   },
 
