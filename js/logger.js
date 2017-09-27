@@ -11,3 +11,4 @@ Logger.prototype.print = function(message) {
 };
 
 module.exports = Logger;
+
